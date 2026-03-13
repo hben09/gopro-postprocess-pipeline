@@ -34,9 +34,9 @@ OUTPUT_RESOLUTION="3840x2160"
 # --- Directories ---
 
 # Default directories (relative to this script's location)
-UNPROCESSED_DIR="$SCRIPT_DIR/unprocessed"
-PROCESSED_DIR="$SCRIPT_DIR/processed"
-ARCHIVE_DIR="$SCRIPT_DIR/archive"
+UNPROCESSED_DIR="$SCRIPT_DIR/1_unprocessed"
+PROCESSED_DIR="$SCRIPT_DIR/2_processed"
+ARCHIVE_DIR="$SCRIPT_DIR/3_archive"
 
 # --- Cleanup ---
 
