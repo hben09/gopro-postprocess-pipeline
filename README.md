@@ -41,9 +41,10 @@ Copy your `.cube` LUT file into the `luts/` directory.
 Edit `config.sh` to set your paths and preferences:
 
 ```bash
-# Required: point these to your files
-GYROFLOW_PRESET="$SCRIPT_DIR/presets/your-preset.gyroflow"
-LUT_FILE="$SCRIPT_DIR/luts/your-lut.cube"
+# These auto-detect the first file in their directories.
+# Only set manually if you have multiple files and want a specific one:
+GYROFLOW_PRESET="$SCRIPT_DIR/presets/specific-preset.gyroflow"
+LUT_FILE="$SCRIPT_DIR/luts/specific-lut.cube"
 
 # Optional: choose encoder
 ENCODER="hevc_videotoolbox"  # or "libx265" for software encoding
@@ -95,12 +96,12 @@ Gyroflow must output an encoded video before FFmpeg can apply the LUT. By using 
 | Speed | Fast (hardware accelerated) | Slow (CPU only) |
 | Quality | Very good | Best |
 | File size | Slightly larger | Slightly smaller |
-| Config | `VT_QUALITY` (1-100, default: 65) | `X265_CRF` (0-51, default: 20) |
+| Config | `VT_QUALITY` (1-100, default: 65, higher = better) | `X265_CRF` (0-51, default: 20, lower = better) |
 
 **Recommendation:** Start with `hevc_videotoolbox` (the default). If you need the absolute best compression ratio, switch to `libx265`.
 
 Tune quality by processing a single file and checking the result:
-- `hevc_videotoolbox`: Lower `VT_QUALITY` = larger/better, higher = smaller. Try 55-70.
+- `hevc_videotoolbox`: Higher `VT_QUALITY` = larger/better, lower = smaller. Try 55-70.
 - `libx265`: Lower `X265_CRF` = larger/better, higher = smaller. Try 18-22.
 
 ## GoPro Chapter Files
