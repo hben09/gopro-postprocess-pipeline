@@ -33,7 +33,7 @@ ProRes intermediate between stages avoids double lossy encoding (only one lossy 
 
 - Config is sourced (`source config.sh`), not parsed
 - Per-file error isolation: failures skip to next file, don't abort batch
-- GoPro chapter files (GH01xxxx, GH02xxxx) processed independently (each has own gyro data)
+- GoPro chapter files (GX01xxxx, GX02xxxx) processed independently (each has own gyro data)
 - Output uses `-tag:v hvc1` for Apple/QuickTime compatibility
 - `-movflags +faststart` on all outputs
 

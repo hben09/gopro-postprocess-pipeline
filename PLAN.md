@@ -72,10 +72,13 @@ Accepts a directory of `.MP4` files or a single file. Output defaults to `<input
 "$GYROFLOW_BIN" "$input_file" \
   --preset "$GYROFLOW_PRESET" \
   -p "{ 'codec': 'ProRes', 'bitrate': 0, 'use_gpu': true, 'audio': true }" \
+  -t "_stabilized" \
   -f
 ```
 
-Output: `{basename}_stab.mov` (ProRes 422 intermediate).
+Output: `{basename}_stabilized.mov` (ProRes 422 intermediate), written alongside the input file.
+
+> **Note:** Gyroflow has no output directory flag — it always writes next to the input file. After Gyroflow finishes, `process.sh` must move the intermediate from `${input_dir}/${basename}_stabilized.mov` to the working/output directory for Stage 2.
 
 #### Stage 2: LUT + H.265 Encode
 
@@ -107,7 +110,7 @@ ffmpeg -i "$intermediate" \
 
 #### GoPro Chapter Files
 
-GoPro splits recordings >12 min into chapters (`GH010042.MP4`, `GH020042.MP4`, etc.). Each is processed independently — no auto-concatenation since each has its own gyro data.
+GoPro splits recordings >12 min into chapters (`GX010042.MP4`, `GX020042.MP4`, etc.). Each is processed independently — no auto-concatenation since each has its own gyro data.
 
 ## Verification
 
