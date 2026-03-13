@@ -80,7 +80,7 @@
         "rotation": null
     },
     "light_refraction_coefficient": 1,
-    "name": "mygyroflow2",
+    "name": "my_setting2",
     "stabilization": {
         "adaptive_zoom_center_offset": [
             0,
@@ -141,7 +141,7 @@
                 "value": 0.1
             }
         ],
-        "use_gravity_vectors": false,
+        "use_gravity_vectors": true,
         "video_speed": 1,
         "video_speed_affects_smoothing": true,
         "video_speed_affects_zooming": true,
