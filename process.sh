@@ -27,7 +27,11 @@ print_banner() {
     echo "  ${DIM}Files:${RESET}   $TOTAL_FILES (.MP4)"
     echo "  ${DIM}Output:${RESET}  $OUTPUT_DIR"
     echo "  ${DIM}Encoder:${RESET} $ENCODER"
-    echo "  ${DIM}LUT:${RESET}     $(basename "${LUT_FILE:-none}")"
+    if [[ "${APPLY_LUT:-true}" == "true" ]]; then
+        echo "  ${DIM}LUT:${RESET}     $(basename "${LUT_FILE:-none}")"
+    else
+        echo "  ${DIM}LUT:${RESET}     disabled"
+    fi
     echo "  ${DIM}Preset:${RESET}  $(basename "${GYROFLOW_PRESET:-none}")"
     print_rule
     echo
@@ -74,12 +78,14 @@ validate_config() {
         ((errors++))
     fi
 
-    if [[ -z "${LUT_FILE:-}" ]]; then
-        log_error "No .cube LUT found. Place a LUT file in luts/"
-        ((errors++))
-    elif [[ ! -f "$LUT_FILE" ]]; then
-        log_error "LUT file not found: $LUT_FILE"
-        ((errors++))
+    if [[ "${APPLY_LUT:-true}" == "true" ]]; then
+        if [[ -z "${LUT_FILE:-}" ]]; then
+            log_error "No .cube LUT found. Place a LUT file in luts/"
+            ((errors++))
+        elif [[ ! -f "$LUT_FILE" ]]; then
+            log_error "LUT file not found: $LUT_FILE"
+            ((errors++))
+        fi
     fi
 
     if [[ ! -x "$GYROFLOW_BIN" ]]; then
@@ -167,13 +173,22 @@ process_file() {
         encoder_args=(-c:v libx265 -crf "$X265_CRF" -pix_fmt yuv420p10le -profile:v main10)
     fi
 
-    local vf="lut3d='${LUT_FILE}':interp=tetrahedral"
+    local vf=""
+    if [[ "${APPLY_LUT:-true}" == "true" ]]; then
+        vf="lut3d='${LUT_FILE}':interp=tetrahedral"
+    fi
     if [[ "$OUTPUT_RESOLUTION" != "source" ]]; then
-        vf="${vf},scale=${OUTPUT_RESOLUTION/x/:}:flags=lanczos"
+        local scale="scale=${OUTPUT_RESOLUTION/x/:}:flags=lanczos"
+        vf="${vf:+${vf},}${scale}"
+    fi
+
+    local -a vf_args=()
+    if [[ -n "$vf" ]]; then
+        vf_args=(-vf "$vf")
     fi
 
     if ! ffmpeg -nostdin -i "$intermediate" \
-        -vf "$vf" \
+        "${vf_args[@]}" \
         "${encoder_args[@]}" \
         -tag:v hvc1 -c:a aac -b:a 256k \
         -movflags +faststart -y "$output_file"; then
