@@ -20,9 +20,9 @@ ProRes intermediate between stages avoids double lossy encoding (only one lossy 
 - `config.sh` - All user-tunable settings (paths, encoder, quality). Sourced by process.sh.
 - `install.sh` - Dependency checker/installer (Homebrew, FFmpeg, Gyroflow verification)
 - `logging.sh` - Shared logging utilities (colors, log functions, timers). Sourced by process.sh and install.sh.
-- `unprocessed/` - Drop raw GoPro footage here (default input directory)
-- `processed/` - Pipeline output lands here (default output directory)
-- `archive/` - Originals are moved here after successful processing
+- `1_unprocessed/` - Drop raw GoPro footage here (default input directory)
+- `2_processed/` - Pipeline output lands here (default output directory)
+- `3_archive/` - Originals are moved here after successful processing
 - `presets/` - User places `.gyroflow` preset files here
 - `luts/` - User places `.cube` LUT files here
 
