@@ -2,7 +2,7 @@
 
 Automated pipeline for processing GoPro footage on macOS. Stabilizes with Gyroflow, applies a color LUT, and exports to space-efficient H.265.
 
-> **Status:** Work in progress. `config.sh` and `install.sh` are implemented. `process.sh` (main pipeline script), `presets/`, and `luts/` directories are not yet created.
+> **Status:** Ready to use. Drop footage in `unprocessed/`, run `./process.sh`, pick up results from `processed/`.
 
 ## Prerequisites
 
@@ -53,25 +53,26 @@ See `config.sh` for all available options.
 
 ## Usage
 
-Process a folder of GoPro footage:
+Drop your GoPro `.MP4` files into `unprocessed/` and run:
 
 ```bash
+./process.sh
+```
+
+Output goes to `processed/`. Originals are moved to `archive/` after successful processing.
+
+You can also specify custom paths:
+
+```bash
+# Process a specific folder
 ./process.sh /path/to/footage
-```
 
-Process a single file:
-
-```bash
+# Process a single file
 ./process.sh /path/to/GX010042.MP4
-```
 
-Specify a custom output directory:
-
-```bash
+# Custom input and output directories
 ./process.sh /path/to/footage /path/to/output
 ```
-
-Output defaults to `<input_dir>/processed/`. Originals are moved to `<input_dir>/originals/` after successful processing.
 
 ## How It Works
 

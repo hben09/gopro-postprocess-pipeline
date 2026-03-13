@@ -28,10 +28,14 @@ VT_QUALITY=65
 # CRF for libx265 (0-51, lower = larger/better). Try 18-22.
 X265_CRF=20
 
-# --- Cleanup ---
+# --- Directories ---
 
-# Subdirectory name for archived originals (created inside the input directory)
-ARCHIVE_DIR_NAME="originals"
+# Default directories (relative to this script's location)
+UNPROCESSED_DIR="$SCRIPT_DIR/unprocessed"
+PROCESSED_DIR="$SCRIPT_DIR/processed"
+ARCHIVE_DIR="$SCRIPT_DIR/archive"
+
+# --- Cleanup ---
 
 # Delete ProRes intermediate files after successful encode
 DELETE_INTERMEDIATE=true
