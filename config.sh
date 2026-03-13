@@ -6,8 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- Gyroflow ---
 
-# Path to Gyroflow binary
-GYROFLOW_BIN="/Applications/Gyroflow.app/Contents/MacOS/Gyroflow"
+# Path to Gyroflow binary (auto-detects on PATH; override with full path if needed)
+GYROFLOW_BIN="$HOME/Applications/Gyroflow/gyroflow"
 
 # Path to .gyroflow preset (auto-detects first .gyroflow file in presets/)
 GYROFLOW_PRESET="$(ls "$SCRIPT_DIR"/presets/*.gyroflow 2>/dev/null | head -n1 || true)"
@@ -15,21 +15,31 @@ GYROFLOW_PRESET="$(ls "$SCRIPT_DIR"/presets/*.gyroflow 2>/dev/null | head -n1 ||
 # --- Color grading ---
 
 # Apply LUT color grading (true/false). Set to false to skip LUT.
-APPLY_LUT=true
+APPLY_LUT=false
 
 # Path to .cube LUT file (auto-detects first .cube file in luts/)
 LUT_FILE="$(ls "$SCRIPT_DIR"/luts/*.cube 2>/dev/null | head -n1 || true)"
 
 # --- Encoding ---
 
-# H.265 encoder: "hevc_videotoolbox" (hardware, fast) or "libx265" (software, best compression)
-ENCODER="hevc_videotoolbox"
+# AV1 encoder: "av1_vaapi" (AMD hardware, fastest) or "libsvtav1" (software, best quality)
+ENCODER="av1_vaapi"
 
-# Quality for hevc_videotoolbox (1-100, higher = larger/better). Try 55-70.
-VT_QUALITY=65
+# VAAPI render device for hardware encoding
+VAAPI_DEVICE="/dev/dri/renderD128"
 
-# CRF for libx265 (0-51, lower = larger/better). Try 18-22.
-X265_CRF=20
+# Quality for av1_vaapi QVBR mode (1-255, lower = larger/better). Try 25-35.
+VAAPI_QUALITY=30
+
+# Max bitrate for av1_vaapi QVBR mode. Sets upper bound for variable bitrate.
+# For 4K 30fps GoPro footage, 50M provides good headroom.
+VAAPI_BITRATE="50M"
+
+# CRF for libsvtav1 (0-63, lower = larger/better). Try 25-32.
+SVT_CRF=28
+
+# Preset for libsvtav1 (0-13, lower = slower/better quality). 4-6 recommended.
+SVT_PRESET=5
 
 # Output resolution: "WIDTHxHEIGHT" or "source" to keep original
 OUTPUT_RESOLUTION="3840x2160"

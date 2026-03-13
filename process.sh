@@ -88,14 +88,14 @@ validate_config() {
         fi
     fi
 
-    if [[ ! -x "$GYROFLOW_BIN" ]]; then
-        log_error "Gyroflow not found at: $GYROFLOW_BIN"
+    if [[ -z "${GYROFLOW_BIN:-}" || ! -x "$GYROFLOW_BIN" ]]; then
+        log_error "Gyroflow not found on PATH. Install Gyroflow (AppImage or package)."
         log_error "Run ./install.sh to check dependencies."
         ((errors++))
     fi
 
-    if [[ "$ENCODER" != "hevc_videotoolbox" && "$ENCODER" != "libx265" ]]; then
-        log_error "Invalid encoder: $ENCODER (must be hevc_videotoolbox or libx265)"
+    if [[ "$ENCODER" != "av1_vaapi" && "$ENCODER" != "libsvtav1" ]]; then
+        log_error "Invalid encoder: $ENCODER (must be av1_vaapi or libsvtav1)"
         ((errors++))
     fi
 
@@ -161,16 +161,16 @@ process_file() {
     mv "$gyroflow_output" "$intermediate"
     CURRENT_INTERMEDIATE="$intermediate"
 
-    # --- Stage 2: LUT + H.265 encode ---
+    # --- Stage 2: LUT + AV1 encode ---
     stage_start="$(timer_start)"
-    log "  ├─ Encode H.265..."
+    log "  ├─ Encode AV1..."
     CURRENT_OUTPUT="$output_file"
 
     local -a encoder_args
-    if [[ "$ENCODER" == "hevc_videotoolbox" ]]; then
-        encoder_args=(-c:v hevc_videotoolbox -q:v "$VT_QUALITY" -pix_fmt p010le -profile:v main10)
+    if [[ "$ENCODER" == "av1_vaapi" ]]; then
+        encoder_args=(-c:v av1_vaapi -rc_mode QVBR -qp "$VAAPI_QUALITY" -b:v "$VAAPI_BITRATE" -profile:v main)
     else
-        encoder_args=(-c:v libx265 -crf "$X265_CRF" -pix_fmt yuv420p10le -profile:v main10)
+        encoder_args=(-c:v libsvtav1 -crf "$SVT_CRF" -preset "$SVT_PRESET" -pix_fmt yuv420p10le -svtav1-params tune=0)
     fi
 
     local vf=""
@@ -182,15 +182,25 @@ process_file() {
         vf="${vf:+${vf},}${scale}"
     fi
 
+    # For VAAPI hardware encoding, upload frames to GPU after software filters
+    if [[ "$ENCODER" == "av1_vaapi" ]]; then
+        vf="${vf:+${vf},}format=p010,hwupload"
+    fi
+
     local -a vf_args=()
     if [[ -n "$vf" ]]; then
         vf_args=(-vf "$vf")
     fi
 
-    if ! ffmpeg -nostdin -i "$intermediate" \
+    local -a hwaccel_args=()
+    if [[ "$ENCODER" == "av1_vaapi" ]]; then
+        hwaccel_args=(-vaapi_device "$VAAPI_DEVICE")
+    fi
+
+    if ! ffmpeg -nostdin "${hwaccel_args[@]}" -i "$intermediate" \
         "${vf_args[@]}" \
         "${encoder_args[@]}" \
-        -tag:v hvc1 -c:a aac -b:a 256k \
+        -c:a aac -b:a 256k \
         -movflags +faststart -y "$output_file"; then
         log_error "  ├─ Encode ${RED}✗${RESET} — FFmpeg failed for $filename"
         CURRENT_OUTPUT=""
@@ -271,7 +281,7 @@ PIPELINE_START="$(timer_start)"
 print_banner
 
 for f in "${INPUT_FILES[@]}"; do
-    ((FILE_INDEX++))
+    ((FILE_INDEX++)) || true
     if process_file "$f"; then
         ((SUCCESS_COUNT++))
     else

@@ -19,16 +19,12 @@ echo
 print_header "Dependency Check"
 echo
 
-# --- Homebrew ---
-echo "${BOLD}Homebrew:${RESET}"
-if command -v brew &>/dev/null; then
-    check_pass "Homebrew found at $(command -v brew)"
+# --- Package Manager ---
+echo "${BOLD}Package Manager:${RESET}"
+if command -v dnf &>/dev/null; then
+    check_pass "dnf found (Fedora)"
 else
-    check_fail "Homebrew not found"
-    echo "    Install from: https://brew.sh"
-    echo
-    echo "Cannot continue without Homebrew."
-    exit 1
+    check_warn "dnf not found — manual dependency installation may be needed"
 fi
 echo
 
@@ -37,8 +33,8 @@ echo "${BOLD}FFmpeg:${RESET}"
 if command -v ffmpeg &>/dev/null; then
     check_pass "FFmpeg found at $(command -v ffmpeg)"
 else
-    echo "  FFmpeg not found — installing via Homebrew..."
-    brew install ffmpeg
+    echo "  FFmpeg not found — installing via dnf..."
+    sudo dnf install -y ffmpeg
     if command -v ffmpeg &>/dev/null; then
         check_pass "FFmpeg installed successfully"
     else
@@ -47,23 +43,49 @@ else
 fi
 echo
 
-# --- HEVC VideoToolbox encoder ---
-echo "${BOLD}HEVC hardware encoder:${RESET}"
-if ffmpeg -encoders 2>/dev/null | grep -q hevc_videotoolbox; then
-    check_pass "hevc_videotoolbox available"
+# --- AV1 encoders ---
+echo "${BOLD}AV1 encoders:${RESET}"
+ENCODER_LIST="$(ffmpeg -encoders 2>/dev/null || true)"
+if echo "$ENCODER_LIST" | grep -q av1_vaapi; then
+    check_pass "av1_vaapi (AMD hardware) available"
 else
-    check_warn "hevc_videotoolbox not available (set ENCODER=\"libx265\" in config.sh as fallback)"
+    check_warn "av1_vaapi not available (hardware encoding unavailable)"
+fi
+if echo "$ENCODER_LIST" | grep -q libsvtav1; then
+    check_pass "libsvtav1 (SVT-AV1 software) available"
+else
+    check_warn "libsvtav1 not available (software fallback unavailable)"
+fi
+echo
+
+# --- VAAPI ---
+echo "${BOLD}VAAPI:${RESET}"
+if [[ -e "${VAAPI_DEVICE:-/dev/dri/renderD128}" ]]; then
+    check_pass "VAAPI device found at ${VAAPI_DEVICE:-/dev/dri/renderD128}"
+    if command -v vainfo &>/dev/null; then
+        if vainfo 2>/dev/null | grep -q "VAProfileAV1Profile0.*VAEntrypointEncSlice"; then
+            check_pass "VAAPI AV1 encode supported"
+        else
+            check_warn "VAAPI AV1 encode not detected (av1_vaapi may not work)"
+        fi
+    else
+        check_warn "vainfo not found — install libva-utils to verify VAAPI support"
+    fi
+else
+    check_warn "VAAPI device not found at ${VAAPI_DEVICE:-/dev/dri/renderD128}"
 fi
 echo
 
 # --- Gyroflow ---
 echo "${BOLD}Gyroflow:${RESET}"
-if [[ -x "$GYROFLOW_BIN" ]]; then
+if [[ -n "${GYROFLOW_BIN:-}" && -x "$GYROFLOW_BIN" ]]; then
     check_pass "Gyroflow found at $GYROFLOW_BIN"
+elif command -v gyroflow &>/dev/null; then
+    check_pass "Gyroflow found at $(command -v gyroflow)"
 else
-    check_fail "Gyroflow not found at $GYROFLOW_BIN"
-    echo "    Download from: https://gyroflow.xyz/download"
-    echo "    Install to /Applications/ and ensure the path in config.sh is correct."
+    check_fail "Gyroflow not found on PATH"
+    echo "    Download AppImage from: https://gyroflow.xyz/download"
+    echo "    Make sure 'gyroflow' is available on PATH."
 fi
 echo
 
