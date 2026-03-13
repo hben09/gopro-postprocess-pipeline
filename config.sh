@@ -10,12 +10,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GYROFLOW_BIN="/Applications/Gyroflow.app/Contents/MacOS/Gyroflow"
 
 # Path to .gyroflow preset (auto-detects first .gyroflow file in presets/)
-GYROFLOW_PRESET="$(ls "$SCRIPT_DIR"/presets/*.gyroflow 2>/dev/null | head -n1)"
+GYROFLOW_PRESET="$(ls "$SCRIPT_DIR"/presets/*.gyroflow 2>/dev/null | head -n1 || true)"
 
 # --- Color grading ---
 
 # Path to .cube LUT file (auto-detects first .cube file in luts/)
-LUT_FILE="$(ls "$SCRIPT_DIR"/luts/*.cube 2>/dev/null | head -n1)"
+LUT_FILE="$(ls "$SCRIPT_DIR"/luts/*.cube 2>/dev/null | head -n1 || true)"
 
 # --- Encoding ---
 
