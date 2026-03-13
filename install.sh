@@ -5,20 +5,22 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
+source "$SCRIPT_DIR/logging.sh"
 
 pass=0
 fail=0
 warn=0
 
-check_pass() { echo "  ✓ $1"; ((pass++)) || true; }
-check_fail() { echo "  ✗ $1"; ((fail++)) || true; }
-check_warn() { echo "  ⚠ $1"; ((warn++)) || true; }
+check_pass() { echo "  ${GREEN}✓${RESET} $1"; ((pass++)) || true; }
+check_fail() { echo "  ${RED}✗${RESET} $1"; ((fail++)) || true; }
+check_warn() { echo "  ${YELLOW}⚠${RESET} $1"; ((warn++)) || true; }
 
-echo "Checking dependencies..."
+echo
+print_header "Dependency Check"
 echo
 
 # --- Homebrew ---
-echo "Homebrew:"
+echo "${BOLD}Homebrew:${RESET}"
 if command -v brew &>/dev/null; then
     check_pass "Homebrew found at $(command -v brew)"
 else
@@ -31,7 +33,7 @@ fi
 echo
 
 # --- FFmpeg ---
-echo "FFmpeg:"
+echo "${BOLD}FFmpeg:${RESET}"
 if command -v ffmpeg &>/dev/null; then
     check_pass "FFmpeg found at $(command -v ffmpeg)"
 else
@@ -46,7 +48,7 @@ fi
 echo
 
 # --- HEVC VideoToolbox encoder ---
-echo "HEVC hardware encoder:"
+echo "${BOLD}HEVC hardware encoder:${RESET}"
 if ffmpeg -encoders 2>/dev/null | grep -q hevc_videotoolbox; then
     check_pass "hevc_videotoolbox available"
 else
@@ -55,7 +57,7 @@ fi
 echo
 
 # --- Gyroflow ---
-echo "Gyroflow:"
+echo "${BOLD}Gyroflow:${RESET}"
 if [[ -x "$GYROFLOW_BIN" ]]; then
     check_pass "Gyroflow found at $GYROFLOW_BIN"
 else
@@ -66,11 +68,11 @@ fi
 echo
 
 # --- Summary ---
-echo "---"
-echo "Results: $pass passed, $fail failed, $warn warnings"
+print_rule
+echo "Results: ${GREEN}$pass passed${RESET}, ${RED}$fail failed${RESET}, ${YELLOW}$warn warnings${RESET}"
 if [[ $fail -gt 0 ]]; then
     echo "Fix the issues above before running the pipeline."
     exit 1
 else
-    echo "Ready to process footage."
+    echo "${GREEN}Ready to process footage.${RESET}"
 fi
