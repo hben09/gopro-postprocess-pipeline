@@ -9,7 +9,7 @@ Automated pipeline for GoPro Hero 12 footage: Gyroflow stabilization, LUT color 
 3-stage per-file pipeline:
 
 1. **Gyroflow** - Stabilize using gyro data, output to ProRes 422 intermediate
-2. **FFmpeg** - Apply .cube LUT + encode to H.265 (HEVC)
+2. **FFmpeg** - Apply .cube LUT + upscale to 4K (3840×2160) + encode to H.265 (HEVC)
 3. **Cleanup** - Delete intermediate, move original to archive
 
 ProRes intermediate between stages avoids double lossy encoding (only one lossy encode at the final H.265 step).

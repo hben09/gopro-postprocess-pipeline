@@ -168,7 +168,7 @@ process_file() {
     fi
 
     if ! ffmpeg -nostdin -i "$intermediate" \
-        -vf "lut3d='${LUT_FILE}':interp=tetrahedral" \
+        -vf "lut3d='${LUT_FILE}':interp=tetrahedral,scale=3840:2160:flags=lanczos" \
         "${encoder_args[@]}" \
         -tag:v hvc1 -c:a aac -b:a 256k \
         -movflags +faststart -y "$output_file"; then
