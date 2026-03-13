@@ -80,7 +80,7 @@
         "rotation": null
     },
     "light_refraction_coefficient": 1,
-    "name": "my_gyroflow_setting",
+    "name": "mygyroflow2",
     "stabilization": {
         "adaptive_zoom_center_offset": [
             0,
@@ -101,7 +101,7 @@
         "fov": 1,
         "frame_readout_direction": "TopToBottom",
         "frame_readout_time": 0,
-        "horizon_lock_amount": 100,
+        "horizon_lock_amount": 50,
         "horizon_lock_roll": 0,
         "lens_correction_amount": 1,
         "max_zoom": 130,
