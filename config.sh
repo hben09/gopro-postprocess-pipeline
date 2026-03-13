@@ -28,6 +28,9 @@ VT_QUALITY=65
 # CRF for libx265 (0-51, lower = larger/better). Try 18-22.
 X265_CRF=20
 
+# Output resolution: "WIDTHxHEIGHT" or "source" to keep original
+OUTPUT_RESOLUTION="3840x2160"
+
 # --- Directories ---
 
 # Default directories (relative to this script's location)

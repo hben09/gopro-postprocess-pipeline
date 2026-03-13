@@ -167,8 +167,13 @@ process_file() {
         encoder_args=(-c:v libx265 -crf "$X265_CRF" -pix_fmt yuv420p10le -profile:v main10)
     fi
 
+    local vf="lut3d='${LUT_FILE}':interp=tetrahedral"
+    if [[ "$OUTPUT_RESOLUTION" != "source" ]]; then
+        vf="${vf},scale=${OUTPUT_RESOLUTION/x/:}:flags=lanczos"
+    fi
+
     if ! ffmpeg -nostdin -i "$intermediate" \
-        -vf "lut3d='${LUT_FILE}':interp=tetrahedral,scale=3840:2160:flags=lanczos" \
+        -vf "$vf" \
         "${encoder_args[@]}" \
         -tag:v hvc1 -c:a aac -b:a 256k \
         -movflags +faststart -y "$output_file"; then
