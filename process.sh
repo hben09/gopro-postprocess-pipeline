@@ -160,16 +160,16 @@ process_file() {
     log "  ├─ Encode H.265..."
     CURRENT_OUTPUT="$output_file"
 
-    local encoder_flags
+    local -a encoder_args
     if [[ "$ENCODER" == "hevc_videotoolbox" ]]; then
-        encoder_flags="-c:v hevc_videotoolbox -q:v $VT_QUALITY -pix_fmt p010le -profile:v main10"
+        encoder_args=(-c:v hevc_videotoolbox -q:v "$VT_QUALITY" -pix_fmt p010le -profile:v main10)
     else
-        encoder_flags="-c:v libx265 -crf $X265_CRF -pix_fmt yuv420p10le -profile:v main10"
+        encoder_args=(-c:v libx265 -crf "$X265_CRF" -pix_fmt yuv420p10le -profile:v main10)
     fi
 
-    if ! ffmpeg -i "$intermediate" \
+    if ! ffmpeg -nostdin -i "$intermediate" \
         -vf "lut3d='${LUT_FILE}':interp=tetrahedral" \
-        $encoder_flags \
+        "${encoder_args[@]}" \
         -tag:v hvc1 -c:a aac -b:a 256k \
         -movflags +faststart -y "$output_file"; then
         log_error "  ├─ Encode ${RED}✗${RESET} — FFmpeg failed for $filename"
@@ -192,7 +192,7 @@ process_file() {
         rm -f "$intermediate"
     fi
 
-    mv "$input_file" "$ARCHIVE_DIR/"
+    mv "$input_file" "$ARCHIVE_DIR/" 2>/dev/null || { cp "$input_file" "$ARCHIVE_DIR/" && rm -f "$input_file"; }
 
     CURRENT_INTERMEDIATE=""
     CURRENT_OUTPUT=""
@@ -222,9 +222,11 @@ if [[ -f "$INPUT_PATH" ]]; then
     INPUT_DIR="$(cd "$(dirname "$INPUT_PATH")" && pwd)"
 elif [[ -d "$INPUT_PATH" ]]; then
     INPUT_DIR="$(cd "$INPUT_PATH" && pwd)"
-    for f in "$INPUT_DIR"/*.MP4 "$INPUT_DIR"/*.mp4; do
+    shopt -s nocaseglob
+    for f in "$INPUT_DIR"/*.mp4; do
         [[ -f "$f" ]] && INPUT_FILES+=("$f")
     done
+    shopt -u nocaseglob
     if [[ ${#INPUT_FILES[@]} -eq 0 ]]; then
         log_error "No .MP4 files found in $INPUT_DIR"
         exit 1
