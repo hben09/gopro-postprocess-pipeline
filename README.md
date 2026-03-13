@@ -57,8 +57,10 @@ See `config.sh` for all available options.
 Drop your GoPro `.MP4` files into `unprocessed/` and run:
 
 ```bash
-./process.sh
+caffeinate -dims ./process.sh
 ```
+
+> `caffeinate` prevents macOS from sleeping during processing. It exits automatically when the pipeline finishes.
 
 Output goes to `processed/`. Originals are moved to `archive/` after successful processing.
 
