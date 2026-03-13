@@ -35,10 +35,11 @@ print_summary() {
 }
 
 usage() {
-    echo "Usage: $0 /path/to/footage [/path/to/output]"
+    echo "Usage: $0 [/path/to/footage] [/path/to/output]"
     echo
     echo "  footage   A single .MP4 file or a directory containing .MP4 files"
-    echo "  output    Output directory (default: <footage_dir>/processed/)"
+    echo "            (default: unprocessed/)"
+    echo "  output    Output directory (default: processed/)"
     exit 1
 }
 
@@ -184,11 +185,7 @@ cleanup_on_exit() {
 
 # --- Argument parsing ---
 
-if [[ $# -lt 1 ]]; then
-    usage
-fi
-
-INPUT_PATH="$1"
+INPUT_PATH="${1:-$UNPROCESSED_DIR}"
 INPUT_FILES=()
 
 if [[ -f "$INPUT_PATH" ]]; then
@@ -208,8 +205,7 @@ else
     exit 1
 fi
 
-OUTPUT_DIR="${2:-${INPUT_DIR}/processed}"
-ARCHIVE_DIR="${INPUT_DIR}/${ARCHIVE_DIR_NAME}"
+OUTPUT_DIR="${2:-$PROCESSED_DIR}"
 mkdir -p "$OUTPUT_DIR" "$ARCHIVE_DIR"
 
 # --- Run ---
