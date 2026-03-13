@@ -16,11 +16,11 @@ ProRes intermediate between stages avoids double lossy encoding (only one lossy 
 
 ## Key Files
 
-- `process.sh` - Main pipeline script. Usage: `./process.sh /path/to/footage [/path/to/output]`
+- `process.sh` - Main pipeline script *(not yet implemented)*. Usage: `./process.sh /path/to/footage [/path/to/output]`
 - `config.sh` - All user-tunable settings (paths, encoder, quality). Sourced by process.sh.
 - `install.sh` - Dependency checker/installer (Homebrew, FFmpeg, Gyroflow verification)
-- `presets/` - User places `.gyroflow` preset files here
-- `luts/` - User places `.cube` LUT files here
+- `presets/` - User places `.gyroflow` preset files here *(directory to be created)*
+- `luts/` - User places `.cube` LUT files here *(directory to be created)*
 
 ## Tech Stack
 

@@ -2,6 +2,8 @@
 
 Automated pipeline for processing GoPro footage on macOS. Stabilizes with Gyroflow, applies a color LUT, and exports to space-efficient H.265.
 
+> **Status:** Work in progress. `config.sh` and `install.sh` are implemented. `process.sh` (main pipeline script), `presets/`, and `luts/` directories are not yet created.
+
 ## Prerequisites
 
 - **macOS** (uses Apple VideoToolbox for hardware H.265 encoding)
@@ -103,8 +105,8 @@ Tune quality by processing a single file and checking the result:
 ## GoPro Chapter Files
 
 GoPro splits recordings longer than ~12 minutes into chapters:
-- `GH010042.MP4` (chapter 1)
-- `GH020042.MP4` (chapter 2)
+- `GX010042.MP4` (chapter 1)
+- `GX020042.MP4` (chapter 2)
 - etc.
 
 Each chapter is processed independently since each contains its own gyro data for stabilization. The final outputs can be concatenated afterwards if needed.
