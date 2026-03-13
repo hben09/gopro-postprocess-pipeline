@@ -23,7 +23,7 @@ LUT_FILE="$(ls "$SCRIPT_DIR"/luts/*.cube 2>/dev/null | head -n1 || true)"
 ENCODER="hevc_videotoolbox"
 
 # Quality for hevc_videotoolbox (1-100, higher = larger/better). Try 55-70.
-VT_QUALITY=75
+VT_QUALITY=65
 
 # CRF for libx265 (0-51, lower = larger/better). Try 18-22.
 X265_CRF=20
