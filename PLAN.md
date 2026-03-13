@@ -15,8 +15,8 @@ Automate the post-processing of GoPro Hero 12 footage (5.3K 30fps, GP-Log color 
 | 2 | `PLAN.md` | Done |
 | 3 | `config.sh` | Done |
 | 4 | `install.sh` | Done |
-| 5 | `process.sh` | Pending |
-| 6 | `presets/.gitkeep`, `luts/.gitkeep` | Pending |
+| 5 | `process.sh` | Done |
+| 6 | `presets/.gitkeep`, `luts/.gitkeep` | Done |
 
 ## File Structure
 
