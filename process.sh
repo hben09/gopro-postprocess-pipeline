@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
+source "$SCRIPT_DIR/logging.sh"
 
 # --- Counters and state ---
 
@@ -14,24 +15,41 @@ FAIL_COUNT=0
 FAILED_FILES=()
 CURRENT_INTERMEDIATE=""
 CURRENT_OUTPUT=""
+FILE_INDEX=0
+TOTAL_FILES=0
+PIPELINE_START=""
 
-# --- Utility functions ---
+# --- Display functions ---
 
-log()       { echo "[$(date '+%H:%M:%S')] $*"; }
-log_error() { echo "[$(date '+%H:%M:%S')] ERROR: $*" >&2; }
+print_banner() {
+    echo
+    print_header "GoPro Post-Processing Pipeline"
+    echo "  ${DIM}Files:${RESET}   $TOTAL_FILES (.MP4)"
+    echo "  ${DIM}Output:${RESET}  $OUTPUT_DIR"
+    echo "  ${DIM}Encoder:${RESET} $ENCODER"
+    echo "  ${DIM}LUT:${RESET}     $(basename "${LUT_FILE:-none}")"
+    echo "  ${DIM}Preset:${RESET}  $(basename "${GYROFLOW_PRESET:-none}")"
+    print_rule
+    echo
+}
 
 print_summary() {
+    local total=$((SUCCESS_COUNT + FAIL_COUNT))
+    local elapsed
+    elapsed="$(timer_elapsed "$PIPELINE_START")"
+
     echo
-    echo "=== Summary ==="
-    echo "  Processed: $((SUCCESS_COUNT + FAIL_COUNT))"
-    echo "  Succeeded: $SUCCESS_COUNT"
-    echo "  Failed:    $FAIL_COUNT"
+    print_header "Summary"
+    echo "  Processed: $total"
+    echo "  ${GREEN}✓ Succeeded: $SUCCESS_COUNT${RESET}"
     if [[ $FAIL_COUNT -gt 0 ]]; then
-        echo "  Failed files:"
+        echo "  ${RED}✗ Failed:    $FAIL_COUNT${RESET}"
         for f in "${FAILED_FILES[@]}"; do
-            echo "    - $f"
+            echo "    ${RED}- $f${RESET}"
         done
     fi
+    echo "  ${DIM}Total time:  $elapsed${RESET}"
+    print_rule
 }
 
 usage() {
@@ -100,14 +118,19 @@ process_file() {
 
     # Skip if already processed
     if [[ -s "$output_file" ]]; then
-        log "Skipping $filename — already processed"
+        log "${YELLOW}⊘ Skipping${RESET} $filename — already processed"
         return 0
     fi
 
-    log "Processing $filename..."
+    local file_start
+    file_start="$(timer_start)"
+
+    log "${BOLD}[${FILE_INDEX}/${TOTAL_FILES}] ${filename}${RESET}"
 
     # --- Stage 1: Gyroflow stabilization ---
-    log "  Stage 1/3: Stabilizing..."
+    local stage_start
+    stage_start="$(timer_start)"
+    log "  ├─ Stabilize (gyroflow)..."
     CURRENT_INTERMEDIATE="$gyroflow_output"
 
     if ! "$GYROFLOW_BIN" "$input_file" \
@@ -115,23 +138,26 @@ process_file() {
         -p "{ 'codec': 'ProRes', 'bitrate': 0, 'use_gpu': true, 'audio': true }" \
         -t "_stabilized" \
         -f; then
-        log_error "Gyroflow failed for $filename"
+        log_error "  ├─ Stabilize ${RED}✗${RESET} — Gyroflow failed for $filename"
         CURRENT_INTERMEDIATE=""
         return 1
     fi
 
     if [[ ! -f "$gyroflow_output" ]]; then
-        log_error "Gyroflow output not found: $gyroflow_output"
+        log_error "  ├─ Stabilize ${RED}✗${RESET} — output not found: $gyroflow_output"
         CURRENT_INTERMEDIATE=""
         return 1
     fi
+
+    log "  ├─ Stabilize ${GREEN}✓${RESET} ${DIM}($(timer_elapsed "$stage_start"))${RESET}"
 
     # Move intermediate to output directory
     mv "$gyroflow_output" "$intermediate"
     CURRENT_INTERMEDIATE="$intermediate"
 
     # --- Stage 2: LUT + H.265 encode ---
-    log "  Stage 2/3: Encoding H.265..."
+    stage_start="$(timer_start)"
+    log "  ├─ Encode H.265..."
     CURRENT_OUTPUT="$output_file"
 
     local encoder_flags
@@ -146,16 +172,18 @@ process_file() {
         $encoder_flags \
         -tag:v hvc1 -c:a aac -b:a 256k \
         -movflags +faststart -y "$output_file"; then
-        log_error "FFmpeg encoding failed for $filename"
+        log_error "  ├─ Encode ${RED}✗${RESET} — FFmpeg failed for $filename"
         CURRENT_OUTPUT=""
         return 1
     fi
 
+    log "  ├─ Encode ${GREEN}✓${RESET} ${DIM}($(timer_elapsed "$stage_start"))${RESET}"
+
     # --- Stage 3: Cleanup ---
-    log "  Stage 3/3: Cleanup..."
+    log "  └─ Cleanup..."
 
     if [[ ! -s "$output_file" ]]; then
-        log_error "Output file is missing or empty: $output_file"
+        log_error "  └─ Cleanup ${RED}✗${RESET} — output file is missing or empty"
         CURRENT_OUTPUT=""
         return 1
     fi
@@ -168,7 +196,8 @@ process_file() {
 
     CURRENT_INTERMEDIATE=""
     CURRENT_OUTPUT=""
-    log "  Done: $output_file"
+
+    log "  └─ ${GREEN}Done${RESET} ${DIM}$(timer_elapsed "$file_start")${RESET} → ${DIM}$output_file${RESET}"
     return 0
 }
 
@@ -176,7 +205,7 @@ process_file() {
 
 cleanup_on_exit() {
     echo
-    log "Interrupted — cleaning up partial files..."
+    log_warn "Interrupted — cleaning up partial files..."
     [[ -n "$CURRENT_INTERMEDIATE" && -f "$CURRENT_INTERMEDIATE" ]] && rm -f "$CURRENT_INTERMEDIATE"
     [[ -n "$CURRENT_OUTPUT" && -f "$CURRENT_OUTPUT" ]] && rm -f "$CURRENT_OUTPUT"
     print_summary
@@ -214,18 +243,19 @@ validate_config
 
 trap cleanup_on_exit INT TERM
 
-log "Processing ${#INPUT_FILES[@]} file(s)..."
-log "Output:  $OUTPUT_DIR"
-log "Encoder: $ENCODER"
-echo
+TOTAL_FILES=${#INPUT_FILES[@]}
+PIPELINE_START="$(timer_start)"
+
+print_banner
 
 for f in "${INPUT_FILES[@]}"; do
+    ((FILE_INDEX++))
     if process_file "$f"; then
         ((SUCCESS_COUNT++))
     else
         ((FAIL_COUNT++))
         FAILED_FILES+=("$(basename "$f")")
-        log_error "Failed: $(basename "$f") — skipping to next file"
+        log_error "Failed: ${BOLD}$(basename "$f")${RESET} — skipping to next file"
     fi
     echo
 done
