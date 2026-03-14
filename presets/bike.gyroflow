@@ -80,7 +80,7 @@
         "rotation": null
     },
     "light_refraction_coefficient": 1,
-    "name": "my_setting2",
+    "name": "bike",
     "stabilization": {
         "adaptive_zoom_center_offset": [
             0,
