@@ -190,6 +190,7 @@ process_file() {
     if ! ffmpeg -nostdin -i "$intermediate" \
         "${vf_args[@]}" \
         "${encoder_args[@]}" \
+        -colorspace bt709 -color_trc bt709 -color_primaries bt709 \
         -tag:v hvc1 -c:a aac -b:a 256k \
         -movflags +faststart -y "$output_file"; then
         log_error "  ├─ Encode ${RED}✗${RESET} — FFmpeg failed for $filename"
