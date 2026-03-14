@@ -175,7 +175,7 @@ process_file() {
 
     local vf=""
     if [[ "${APPLY_LUT:-true}" == "true" ]]; then
-        vf="format=yuv422p16le,lut3d='${LUT_FILE}':interp=tetrahedral"
+        vf="format=gbrp16le,lut3d='${LUT_FILE}':interp=tetrahedral"
     fi
     if [[ "$OUTPUT_RESOLUTION" != "source" ]]; then
         local scale="scale=${OUTPUT_RESOLUTION/x/:}:flags=lanczos"
