@@ -170,7 +170,7 @@ process_file() {
     if [[ "$ENCODER" == "hevc_videotoolbox" ]]; then
         encoder_args=(-c:v hevc_videotoolbox -q:v "$VT_QUALITY" -pix_fmt p010le -profile:v main10)
     else
-        encoder_args=(-c:v libx265 -crf "$X265_CRF" -pix_fmt yuv420p10le -profile:v main10)
+        encoder_args=(-c:v libx265 -preset "$X265_PRESET" -crf "$X265_CRF" -x265-params "$X265_PARAMS" -pix_fmt yuv420p10le -profile:v main10)
     fi
 
     local vf=""

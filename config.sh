@@ -28,8 +28,14 @@ ENCODER="hevc_videotoolbox"
 # Quality for hevc_videotoolbox (1-100, higher = larger/better). Try 55-70.
 VT_QUALITY=65
 
-# CRF for libx265 (0-51, lower = larger/better). Try 18-22.
-X265_CRF=20
+# CRF for libx265 (0-51, lower = larger/better). Try 20-24 for 10-bit.
+X265_CRF=22
+
+# Preset for libx265 ("medium", "slow", "slower"). Slower = better compression.
+X265_PRESET="slow"
+
+# Advanced x265 tuning params (optimized for GoPro outdoor/action footage)
+X265_PARAMS="aq-mode=3:psy-rd=2.0:psy-rdoq=1.0:rc-lookahead=60:bframes=8"
 
 # Output resolution: "WIDTHxHEIGHT" or "source" to keep original
 OUTPUT_RESOLUTION="3840x2160"
