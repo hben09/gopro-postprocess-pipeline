@@ -72,36 +72,36 @@ validate_config() {
 
     if [[ -z "${GYROFLOW_PRESET:-}" ]]; then
         log_error "No .gyroflow preset found. Place a preset file in presets/"
-        ((errors++))
+        errors=$((errors + 1))
     elif [[ ! -f "$GYROFLOW_PRESET" ]]; then
         log_error "Gyroflow preset not found: $GYROFLOW_PRESET"
-        ((errors++))
+        errors=$((errors + 1))
     fi
 
     if [[ "${APPLY_LUT:-true}" == "true" ]]; then
         if [[ -z "${LUT_FILE:-}" ]]; then
             log_error "No .cube LUT found. Place a LUT file in luts/"
-            ((errors++))
+            errors=$((errors + 1))
         elif [[ ! -f "$LUT_FILE" ]]; then
             log_error "LUT file not found: $LUT_FILE"
-            ((errors++))
+            errors=$((errors + 1))
         fi
     fi
 
     if [[ ! -x "$GYROFLOW_BIN" ]]; then
         log_error "Gyroflow not found at: $GYROFLOW_BIN"
         log_error "Run ./install.sh to check dependencies."
-        ((errors++))
+        errors=$((errors + 1))
     fi
 
     if [[ "$ENCODER" != "hevc_videotoolbox" && "$ENCODER" != "libx265" ]]; then
         log_error "Invalid encoder: $ENCODER (must be hevc_videotoolbox or libx265)"
-        ((errors++))
+        errors=$((errors + 1))
     fi
 
     if ! command -v ffmpeg &>/dev/null; then
         log_error "ffmpeg not found on PATH. Run ./install.sh to install."
-        ((errors++))
+        errors=$((errors + 1))
     fi
 
     if [[ $errors -gt 0 ]]; then
@@ -272,11 +272,11 @@ PIPELINE_START="$(timer_start)"
 print_banner
 
 for f in "${INPUT_FILES[@]}"; do
-    ((FILE_INDEX++))
+    FILE_INDEX=$((FILE_INDEX + 1))
     if process_file "$f"; then
-        ((SUCCESS_COUNT++))
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
     else
-        ((FAIL_COUNT++))
+        FAIL_COUNT=$((FAIL_COUNT + 1))
         FAILED_FILES+=("$(basename "$f")")
         log_error "Failed: ${BOLD}$(basename "$f")${RESET} — skipping to next file"
     fi
