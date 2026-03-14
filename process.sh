@@ -141,7 +141,7 @@ process_file() {
 
     if ! "$GYROFLOW_BIN" "$input_file" \
         --preset "$GYROFLOW_PRESET" \
-        -p "{ 'codec': 'ProRes', 'bitrate': 0, 'use_gpu': true, 'audio': true }" \
+        -p "{ 'codec': 'ProRes', 'codec_options': '3', 'bitrate': 0, 'use_gpu': true, 'audio': true }" \
         -t "_stabilized" \
         -f; then
         log_error "  ├─ Stabilize ${RED}✗${RESET} — Gyroflow failed for $filename"
@@ -175,7 +175,7 @@ process_file() {
 
     local vf=""
     if [[ "${APPLY_LUT:-true}" == "true" ]]; then
-        vf="lut3d='${LUT_FILE}':interp=tetrahedral"
+        vf="format=yuv422p16le,lut3d='${LUT_FILE}':interp=tetrahedral"
     fi
     if [[ "$OUTPUT_RESOLUTION" != "source" ]]; then
         local scale="scale=${OUTPUT_RESOLUTION/x/:}:flags=lanczos"
@@ -191,7 +191,7 @@ process_file() {
         "${vf_args[@]}" \
         "${encoder_args[@]}" \
         -colorspace bt709 -color_trc bt709 -color_primaries bt709 \
-        -tag:v hvc1 -c:a aac -b:a 256k \
+        -tag:v hvc1 -c:a copy \
         -movflags +faststart -y "$output_file"; then
         log_error "  ├─ Encode ${RED}✗${RESET} — FFmpeg failed for $filename"
         CURRENT_OUTPUT=""
