@@ -8,8 +8,8 @@ Automated pipeline for GoPro Hero 12 footage: Gyroflow stabilization, LUT color 
 
 3-stage per-file pipeline:
 
-1. **Gyroflow** - Stabilize using gyro data, output to ProRes 422 intermediate
-2. **FFmpeg** - Apply .cube LUT + optional resolution scaling + encode to H.265 (HEVC)
+1. **Gyroflow** - Stabilize using gyro data, output to ProRes 422 HQ intermediate (GPU accelerated, audio preserved)
+2. **FFmpeg** - Optional .cube LUT (tetrahedral interpolation, `APPLY_LUT=false` by default) + optional resolution scaling + 10-bit H.265 encode (main10 profile, bt709 color space, audio passthrough)
 3. **Cleanup** - Delete intermediate, move original to archive
 
 ProRes intermediate between stages avoids double lossy encoding (only one lossy encode at the final H.265 step).
@@ -40,6 +40,9 @@ ProRes intermediate between stages avoids double lossy encoding (only one lossy 
 - GoPro chapter files (GX01xxxx, GX02xxxx) processed independently (each has own gyro data)
 - Output uses `-tag:v hvc1` for Apple/QuickTime compatibility
 - `-movflags +faststart` on all outputs
+- Already-processed files are skipped (enables resumable batches)
+- Case-insensitive `.mp4` matching via `nocaseglob`
+- Interactive preset selection when multiple `.gyroflow` files exist in `presets/` (auto-selects if only one)
 
 ## User Setup
 

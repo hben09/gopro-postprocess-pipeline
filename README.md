@@ -2,7 +2,7 @@
 
 Automated pipeline for processing GoPro footage on macOS. Stabilizes with Gyroflow, applies a color LUT, and exports to space-efficient H.265.
 
-> **Status:** Ready to use. Drop footage in `unprocessed/`, run `./process.sh`, pick up results from `processed/`.
+> **Status:** Ready to use. Drop footage in `1_unprocessed/`, run `./process.sh`, pick up results from `2_processed/`.
 
 ## Prerequisites
 
@@ -32,6 +32,8 @@ This checks for Homebrew, installs FFmpeg if needed, and verifies Gyroflow is av
 4. Click the arrow next to the Export button and choose **"Create settings preset"**
 5. Save the `.gyroflow` file to the `presets/` directory in this repo
 
+You can place multiple presets in `presets/` — the pipeline will prompt you to choose one at startup. If only one preset exists, it's selected automatically.
+
 ### 3. Place your LUT file
 
 Copy your `.cube` LUT file into the `luts/` directory.
@@ -41,9 +43,11 @@ Copy your `.cube` LUT file into the `luts/` directory.
 Edit `config.sh` to set your paths and preferences:
 
 ```bash
+# LUT is disabled by default — set to true to apply your .cube LUT
+APPLY_LUT=false
+
 # These auto-detect the first file in their directories.
 # Only set manually if you have multiple files and want a specific one:
-GYROFLOW_PRESET="$SCRIPT_DIR/presets/specific-preset.gyroflow"
 LUT_FILE="$SCRIPT_DIR/luts/specific-lut.cube"
 
 # Optional: choose encoder
@@ -54,7 +58,7 @@ See `config.sh` for all available options.
 
 ## Usage
 
-Drop your GoPro `.MP4` files into `unprocessed/` and run:
+Drop your GoPro `.MP4` files into `1_unprocessed/` and run:
 
 ```bash
 caffeinate -dims ./process.sh
@@ -62,7 +66,7 @@ caffeinate -dims ./process.sh
 
 > `caffeinate` prevents macOS from sleeping during processing. It exits automatically when the pipeline finishes.
 
-Output goes to `processed/`. Originals are moved to `archive/` after successful processing.
+Output goes to `2_processed/`. Originals are moved to `3_archive/` after successful processing.
 
 You can also specify custom paths:
 
@@ -81,11 +85,13 @@ You can also specify custom paths:
 
 Each file goes through a 3-stage pipeline:
 
-1. **Gyroflow stabilization** — Uses gyro data embedded in the GoPro file to stabilize footage. Outputs a ProRes 422 intermediate (near-lossless) to preserve quality.
+1. **Gyroflow stabilization** — Uses gyro data embedded in the GoPro file to stabilize footage. Outputs a ProRes 422 HQ intermediate (near-lossless) with GPU acceleration to preserve quality. Audio is preserved.
 
-2. **LUT + H.265 encode** — FFmpeg applies your `.cube` LUT with tetrahedral interpolation and encodes to H.265 (HEVC). This is the only lossy encode in the pipeline.
+2. **LUT + H.265 encode** — FFmpeg applies your `.cube` LUT with tetrahedral interpolation (if `APPLY_LUT=true`) and encodes to 10-bit H.265 (HEVC) with bt709 color space metadata. Audio is passed through unchanged. This is the only lossy encode in the pipeline.
 
-3. **Cleanup** — Deletes the ProRes intermediate, moves the original file to an archive folder.
+3. **Cleanup** — Deletes the ProRes intermediate, moves the original file to `3_archive/`.
+
+Files already present in the output directory are skipped, so interrupted batches can be resumed.
 
 ### Why ProRes intermediate?
 
