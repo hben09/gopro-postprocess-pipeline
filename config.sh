@@ -9,13 +9,36 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Path to Gyroflow binary
 GYROFLOW_BIN="/Applications/Gyroflow.app/Contents/MacOS/Gyroflow"
 
-# Path to .gyroflow preset (auto-detects first .gyroflow file in presets/)
-GYROFLOW_PRESET="$(ls "$SCRIPT_DIR"/presets/*.gyroflow 2>/dev/null | head -n1 || true)"
+# Path to .gyroflow preset (auto-selects if one, prompts if multiple)
+_gyroflow_presets=()
+while IFS= read -r f; do
+    _gyroflow_presets+=("$f")
+done < <(ls "$SCRIPT_DIR"/presets/*.gyroflow 2>/dev/null || true)
+
+if [[ ${#_gyroflow_presets[@]} -eq 1 ]]; then
+    GYROFLOW_PRESET="${_gyroflow_presets[0]}"
+elif [[ ${#_gyroflow_presets[@]} -gt 1 ]]; then
+    echo "Available Gyroflow presets:"
+    for i in "${!_gyroflow_presets[@]}"; do
+        echo "  $((i+1))) $(basename "${_gyroflow_presets[$i]}")"
+    done
+    while true; do
+        read -rp "Select preset [1-${#_gyroflow_presets[@]}]: " _choice
+        if [[ "$_choice" =~ ^[0-9]+$ ]] && (( _choice >= 1 && _choice <= ${#_gyroflow_presets[@]} )); then
+            GYROFLOW_PRESET="${_gyroflow_presets[$((_choice-1))]}"
+            break
+        fi
+        echo "Invalid selection. Try again."
+    done
+else
+    GYROFLOW_PRESET=""
+fi
+unset _gyroflow_presets _choice
 
 # --- Color grading ---
 
 # Apply LUT color grading (true/false). Set to false to skip LUT.
-APPLY_LUT=true
+APPLY_LUT=false
 
 # Path to .cube LUT file (auto-detects first .cube file in luts/)
 LUT_FILE="$(ls "$SCRIPT_DIR"/luts/*.cube 2>/dev/null | head -n1 || true)"
