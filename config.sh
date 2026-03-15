@@ -38,7 +38,7 @@ unset _gyroflow_presets _choice
 # --- Color grading ---
 
 # Apply LUT color grading (true/false). Set to false to skip LUT.
-APPLY_LUT=false
+APPLY_LUT=true
 
 # Path to .cube LUT file (auto-detects first .cube file in luts/)
 LUT_FILE="$(ls "$SCRIPT_DIR"/luts/*.cube 2>/dev/null | head -n1 || true)"
